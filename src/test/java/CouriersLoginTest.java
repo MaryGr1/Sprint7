@@ -2,25 +2,37 @@ import io.restassured.RestAssured;
 import io.restassured.filter.log.RequestLoggingFilter;
 import io.restassured.filter.log.ResponseLoggingFilter;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.example.Courier;
+import org.example.CourierNoLogin;
+import org.example.CourierNoPassword;
 import org.example.CourierSteps;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.notNullValue;
 
 public class CouriersLoginTest {
 
-    public String login = RandomStringUtils.randomAlphabetic(12);
-    public String password = RandomStringUtils.randomAlphabetic(12);
     CourierSteps courierSteps = new CourierSteps();
+    private Courier courier;
+    private CourierNoLogin courierNoLogin;
+    private CourierNoPassword courierNoPassword;
 
     @Before
 
     public void setUp(){
         RestAssured.baseURI = "https://qa-scooter.praktikum-services.ru";
         RestAssured.filters(new RequestLoggingFilter(), new ResponseLoggingFilter());
+        courier = new Courier();
+        courier.setLogin(RandomStringUtils.randomAlphabetic(12));
+        courier.setPassword(RandomStringUtils.randomAlphabetic(12));
+        courierNoLogin = new CourierNoLogin();
+        courierNoLogin.setPassword(RandomStringUtils.randomAlphabetic(12));
+        courierNoPassword = new CourierNoPassword();
+        courierNoPassword.setLogin(RandomStringUtils.randomAlphabetic(12));
+        courierSteps
+                .createCourier(courier);
 
     }
 
@@ -30,11 +42,8 @@ public class CouriersLoginTest {
 
     public void successfulAuthorizationTest(){
 
-        courierSteps
-                .createCourier(login, password);
-
        courierSteps
-               .loginCourier(login, password)
+               .loginCourier(courier)
                 .statusCode(200)
                 .and()
                 .assertThat().body("id",notNullValue());
@@ -45,19 +54,10 @@ public class CouriersLoginTest {
     @Test
 
     public void authorizationWithoutALogin(){
-        courierSteps
-                .createCourier(login, password);
 
-        given()
-                .header("Content-type", "application/json")
-                .and()
-                .body("{\n" +
-                        "  \"password\" : \""  + password + "\", \n" +
-                        "\"firstName\" : \"saske\" \n" +
-                        "}")
-                .when()
-                .post("/api/v1/courier/login")
-                .then().statusCode(400);
+       courierSteps
+               .loginCourierNoLogin(courierNoLogin)
+                .statusCode(400);
     }
 
     // авторизация без пароля (вечный спиннер!!! в постман так же (ошибка 504)
@@ -65,19 +65,10 @@ public class CouriersLoginTest {
     @Test
 
     public void authorizationWithoutAPassword(){
-        courierSteps
-                .createCourier(login, password);
 
-    given()
-                .header("Content-type", "application/json")
-                .and()
-                .body("{\n" +
-                        " \"login\" : \"" + login + "\",\n" +
-                        "\"firstName\" : \"saske\" \n" +
-                        "}")
-                .when()
-                .post("/api/v1/courier/login")
-                .then().statusCode(400);
+courierSteps
+        .loginCourierNoPassword(courierNoPassword)
+        .statusCode(400);
 }
 
     // несуществующий логин
@@ -85,20 +76,13 @@ public class CouriersLoginTest {
     @Test
 
     public void nonExistentLoginTest(){
-        courierSteps
-                .createCourier(login, password);
 
-        given()
-                .header("Content-type", "application/json")
-                .and()
-                .body("{\n" +
-                        " \"login\" : \" kjhgfd\" ,\n" +
-                        "  \"password\" : \""  + password + "\", \n" +
-                        "\"firstName\" : \"saske\" \n" +
-                        "}")
-                .when()
-                .post("/api/v1/courier/login")
-                .then().statusCode(404);
+        Courier fakeCourier = new Courier();
+        fakeCourier.setLogin("nonExistentLogin");
+        fakeCourier.setPassword(courier.getPassword());
+        courierSteps
+        .loginCourierErrorLogin(fakeCourier)
+        .statusCode(404);
     }
 
 
@@ -107,29 +91,24 @@ public class CouriersLoginTest {
     @Test
 
     public void nonExistentPasswordTest(){
-        courierSteps
-                .createCourier(login, password);
 
-        given()
-                .header("Content-type", "application/json")
-                .and()
-                .body("{\n" +
-                        " \"login\" : \"" + login + "\",\n" +
-                        " \"password\" : \" kjhgfd\" ,\n" +
-                        "\"firstName\" : \"saske\" \n" +
-                        "}")
-                .when()
-                .post("/api/v1/courier/login")
-                .then().statusCode(404);
+        Courier fakeCourier = new Courier();
+        fakeCourier.setLogin(courier.getLogin());
+        fakeCourier.setPassword("nonExistentPassword");
+
+        courierSteps
+                .loginCourierErrorPassword(fakeCourier)
+        .statusCode(404);
     }
 
 
    @After
 
     public void tearDown() {
-        Integer id = courierSteps.loginCourier(login, password)
+        Integer id = courierSteps.loginCourier(courier)
                 .extract().body().path("id");
-        courierSteps.deleteCourier(id);
+       courier.setId(id);
+        courierSteps.deleteCourier(courier);
 
     }
 }

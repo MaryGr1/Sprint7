@@ -2,6 +2,7 @@ import io.restassured.RestAssured;
 import io.restassured.filter.log.RequestLoggingFilter;
 import io.restassured.filter.log.ResponseLoggingFilter;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.example.Courier;
 import org.example.CourierSteps;
 import org.junit.After;
 import org.junit.Before;
@@ -11,8 +12,7 @@ import org.junit.Test;
 import static org.hamcrest.Matchers.is;
 
 public class CreatingACourierTest {
-    public String login = RandomStringUtils.randomAlphabetic(12);
-    public String password = RandomStringUtils.randomAlphabetic(12);
+    private Courier courier;
     CourierSteps courierSteps = new CourierSteps();
 
     @Before
@@ -20,6 +20,9 @@ public class CreatingACourierTest {
     public void setUp(){
         RestAssured.baseURI = "https://qa-scooter.praktikum-services.ru";
         RestAssured.filters(new RequestLoggingFilter(), new ResponseLoggingFilter());
+        courier = new Courier();
+        courier.setLogin(RandomStringUtils.randomAlphabetic(12));
+        courier.setPassword(RandomStringUtils.randomAlphabetic(12));
     }
 
     // создание курьера + проверка ответа
@@ -28,7 +31,7 @@ public class CreatingACourierTest {
     public void creatingACourierStatusCodeTest() {
 
         courierSteps
-                .createCourier(login, password)
+                .createCourier(courier)
                 .statusCode(201)
                 .body("ok",is(true));
     }
@@ -38,9 +41,9 @@ public class CreatingACourierTest {
 
     public void creatingIdenticalCouriersTest() {
         courierSteps
-                .createCourier(login, password);
+                .createCourier(courier);
         courierSteps
-                .createCourier(login, password)
+                .createCourier(courier)
         .statusCode(409);
     }
 
@@ -48,9 +51,10 @@ public class CreatingACourierTest {
     @After
 
     public void tearDown() {
-        Integer id = courierSteps.loginCourier(login, password)
+        Integer id = courierSteps.loginCourier(courier)
                 .extract().body().path("id");
-        courierSteps.deleteCourier(id);
+        courier.setId(id);
+        courierSteps.deleteCourier(courier);
 
     }
 

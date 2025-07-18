@@ -2,6 +2,7 @@ import io.restassured.RestAssured;
 import io.restassured.filter.log.RequestLoggingFilter;
 import io.restassured.filter.log.ResponseLoggingFilter;
 import io.restassured.response.Response;
+import org.example.OrderSteps;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -19,6 +20,8 @@ import static org.hamcrest.Matchers.notNullValue;
 
 public class CreatingAnOrderTest {
     private final String jsonFile;
+
+    OrderSteps orderSteps = new OrderSteps();
 
     public CreatingAnOrderTest(String jsonFile) {
         this.jsonFile = jsonFile;
@@ -51,16 +54,11 @@ public class CreatingAnOrderTest {
 
     public void creatingAnOrderTest() throws IOException{
         String jsonBody = readJsonFromFile(jsonFile);
-        Response response = given()
-                .header("Content-type", "application/json")
-                .and()
-                .body(jsonBody)
-                .when()
-                .post("/api/v1/orders");
-                response.then().statusCode(201)
+        orderSteps
+                .creatingAnOrder(jsonBody)
+                .statusCode(201)
                 .and()
                 .assertThat().body("track",notNullValue());
-        System.out.println(response.getBody().asString());
     }
 
 

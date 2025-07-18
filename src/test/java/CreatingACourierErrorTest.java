@@ -2,7 +2,7 @@ import io.restassured.RestAssured;
 import io.restassured.filter.log.RequestLoggingFilter;
 import io.restassured.filter.log.ResponseLoggingFilter;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.example.CourierSteps;
+import org.example.*;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -10,15 +10,21 @@ import static io.restassured.RestAssured.given;
 
 public class CreatingACourierErrorTest {
 
-    public String login = RandomStringUtils.randomAlphabetic(12);
-    public String password = RandomStringUtils.randomAlphabetic(12);
     CourierSteps courierSteps = new CourierSteps();
+    private CourierNoLogin courierNoLogin;
+    private CourierNoPassword courierNoPassword;
+    private CourierNoFirstName courierNoFirstName;
 
     @Before
 
     public void setUp(){
         RestAssured.baseURI = "https://qa-scooter.praktikum-services.ru";
         RestAssured.filters(new RequestLoggingFilter(), new ResponseLoggingFilter());
+        courierNoLogin = new CourierNoLogin();
+        courierNoLogin.setPassword(RandomStringUtils.randomAlphabetic(12));
+        courierNoPassword = new CourierNoPassword();
+        courierNoPassword.setLogin(RandomStringUtils.randomAlphabetic(12));
+        courierNoFirstName = new CourierNoFirstName();
     }
 
     //создание без логина
@@ -26,16 +32,9 @@ public class CreatingACourierErrorTest {
     @Test
 
     public void creationWithoutALoginTest() {
-        given()
-                .header("Content-type", "application/json")
-                .and()
-                .body("{\n" +
-                        "  \"password\" : \""  + password + "\", \n" +
-                        "\"firstName\" : \"saske\" \n" +
-                        "}")
-                .when()
-                .post("/api/v1/courier")
-                .then().statusCode(400);
+        courierSteps
+                .createCourierNoLogin(courierNoLogin)
+                .statusCode(400);
     }
 
     //создание без пароля
@@ -43,16 +42,9 @@ public class CreatingACourierErrorTest {
     @Test
 
     public void creationWithoutAPasswordTest() {
-        given()
-                .header("Content-type", "application/json")
-                .and()
-                .body("{\n" +
-                        " \"login\" : \"" + login + "\",\n" +
-                        "\"firstName\" : \"saske\" \n" +
-                        "}")
-                .when()
-                .post("/api/v1/courier")
-                .then().statusCode(400);
+        courierSteps
+                .createCourierNoPassword(courierNoPassword)
+                .statusCode(400);
     }
 
     //создание без имени курьера
@@ -60,16 +52,9 @@ public class CreatingACourierErrorTest {
     @Test
 
     public void creationWithoutAFirstNameTest() {
-        given()
-                .header("Content-type", "application/json")
-                .and()
-                .body("{\n" +
-                        " \"login\" : \"" + login + "\",\n" +
-                        "  \"password\" : \""  + password + "\", \n" +
-                        "}")
-                .when()
-                .post("/api/v1/courier")
-                .then().statusCode(400);
+       courierSteps
+               .createCourierNoFirstName(courierNoFirstName)
+               .statusCode(400);
     }
 
 }
