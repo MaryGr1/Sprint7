@@ -12,6 +12,11 @@ target/
 *.iml
 *.ipr
 
+# Compiled class file
+*.class
+*.idea
+*.build
+
 ### Eclipse ###
 .apt_generated
 .classpath
