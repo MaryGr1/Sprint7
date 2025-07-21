@@ -10,11 +10,11 @@ public class OrderSteps {
 
     @Step("Send POST request to /api/v1/orders")
 
-    public ValidatableResponse creatingAnOrder(String jsonBody) {
+    public ValidatableResponse creatingAnOrder(Order order) {
         return given()
                 .header("Content-type", "application/json")
                 .and()
-                .body(jsonBody)
+                .body(order)
                 .when()
                 .post("/api/v1/orders")
                 .then();
